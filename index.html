@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="https://unpkg.com/vuex@2.0.0"></script>
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<script src="items.json"></script>
+<link rel="stylesheet" type="text/css" href="style.css">
+
+<body style="background-color: cadetblue;">
+    <div id="app">
+        <div align="center" class="w3-row">
+            <button @click="reset()">Reset</button>
+            <br>
+            <div class="w3-panel w3-white w3-center w3-padding-16" v-for="item, num in $store.state.cartItems">
+                <div class="w3-quarter">
+                    <h1 class="w3-text text">{{item.productName}}</h1>
+                    <img class="w3-small" v-bind:src="item.image" style="max-width:80px; max-height: 80px">
+                    <h1 class="w3-text text">{{'$' + item.price}}</h1>
+                </div>
+                <div class="w3-quarter">
+                    <a v-bind:href="item.url" target="_blank" class="w3-text text">{{item.itemid}}</a>
+                    <h1 class="w3-text text">{{item.description}}</h1>
+                </div>
+                <div class="w3-quarter">
+                    <h1 class="w3-text text">{{item.quantity}}</h1>
+                    <button @click="increment(item,num)">+</button>
+                    <button @click="decrement(item,num)">-</button>
+                    <br>
+                    <br>
+                    <button @click="removeItem(item,num)">Remove Item</button>
+                </div>
+                <div class="w3-quarter">
+                    <h1 class="w3-text text">SubTotal</h1>
+                    <h1 class="w3-text text">{{'$' + getSubtotal(item)}}</h1>
+                </div>
+            </div>
+            <div>
+                <h1>Total:${{total}}</h1>
+            </div>
+        </div>
+    </div>
+        
+<script>
+    //model
+    const store = new Vuex.Store({
+        state: {
+            total: 4,
+            cartItems: [
+                {
+                    "image": "https://media.sweetwater.com/images/items/120/SM57-medium.jpg",
+                    "url": "https://www.sweetwater.com/store/detail/SM57",
+                    "manufacturer": "Shure",
+                    "productName": "Sm57",
+                    "itemid": "SM57",
+                    "quantity": 1,
+                    "price": 99.00,
+                    "description": "Dynamic Microphone with Cardioid Pickup Pattern, 40Hz-15kHz Frequency Response, Low Impedance, Includes Stand Adapter, and Zippered Carrying Case",
+                    "available": 9
+                },
+                {
+                    "image": "https://media.sweetwater.com/api/i/f-webp__q-82__ha-c7901f059269b4c3__hmac-ca9855c930666d894a0047170b1c002f9d347ca3/images/items/750/SGS17HCCH-large.jpg.auto.webp",
+                    "url": "https://www.sweetwater.com/store/detail/SGS17HCCH/sn170099523",
+                    "manufacturer": "Gibson",
+                    "productName": "SG Standard 2017 T - Heritage Cherry",
+                    "itemid": "SGS17HCCH",
+                    "quantity": 1,
+                    "price": 1169.00,
+                    "serial": 170099523,
+                    "description": "Solidbody Electric Guitar with Mahogany Body, Mahogany Neck, Rosewood Fingerboard, and 2 Humbucking Pickups - Heritage Cherry",
+                    "available": 1
+                },
+                {
+                    "image": "https://media.sweetwater.com/images/items/120/SM58-medium.jpg",
+                    "url": "https://www.sweetwater.com/store/detail/SM58",
+                    "manufacturer": "Shure",
+                    "productName": "SM58",
+                    "itemid": "SM58",
+                    "quantity": 3,
+                    "price": 99.00,
+                    "description": "Dynamic Vocal Microphone with Cardioid Pickup Pattern and 50Hz-15kHz Frequency Response, Includes Stand Adapter, and Zippered Carrying Case",
+                    "available": 6
+                },
+                {
+                    "image": "https://media.sweetwater.com/images/items/120/R16-medium.jpg",
+                    "url": "https://www.sweetwater.com/store/detail/R16",
+                    "manufacturer": "Zoom",
+                    "productName": "R16",
+                    "itemid": "R16",
+                    "quantity": 1,
+                    "price": 399.99,
+                    "description": "16-track Portable SD Recorder, USB Audio Interface, and DAW Control Surface with 8 Microphone Inputs, Built-in Stereo Condenser Microphones, Built-in Effects, 1GB SD Card, and USB - Mac/PC",
+                    "available": 14
+                }
+                ],
+        },
+        mutations: {
+
+            initialiseStore(state) {
+                // Check if the ID exists
+                if(localStorage.getItem('store')) {
+                        // Replace the state object with the stored item
+                    this.replaceState(
+                        Object.assign(state, JSON.parse(localStorage.getItem('store')))
+                    );
+                }
+            },
+            
+            increment (state, n) {
+                state.cartItems[n].quantity += 1;
+            },
+
+            decrement (state, n) {
+                if (state.cartItems[n].quantity > 0) {
+                    state.cartItems[n].quantity -= 1;
+                }
+            },
+
+            removeItem (state, n) {
+                state.cartItems.splice(n,1);
+            },
+
+            addItem (state, item){
+                state.cartItems.push(item)
+            },
+            
+            resetState (state) {
+                Object.assign(state, getDefault())
+            }
+
+        },
+        getters : {
+            total : state => {
+                var curTot = 0;
+                var i = 0;
+                while (i < state.cartItems.length) {
+                    var curItemPrice = state.cartItems[i].price * state.cartItems[i].quantity
+                    curTot += curItemPrice
+                    i+= 1
+                }
+                state.total = Math.round(curTot * 100) / 100
+                return state.total
+            }
+        },
+        })
+
+    //controller
+    const app = new Vue({
+        el: '#app',
+        store,
+        beforeCreate() {
+        this.$store.commit('initialiseStore');
+        },
+        data: {
+        },
+        computed: {
+
+            total () {
+                return this.$store.getters.total
+            },
+
+            shoppingCart() {
+                return this.$store.state.cartItems
+            },
+
+        },
+        methods: {
+
+            increment: function(item, num) {
+                store.commit('increment', num);
+            },
+
+            decrement: function(item, num) {
+                store.commit('decrement', num);
+            },
+
+            getSubtotal: function(item) {
+                var subTot = ((parseFloat(item.price) * parseFloat(item.quantity)));
+                return Math.round(subTot * 100) / 100;
+            },
+
+            removeItem: function(item,num) {
+                store.commit('removeItem', num);
+            },
+
+            addItem: function(item){
+                store.commit('addItem',newItem);
+            },
+            
+            reset(){
+                store.commit('resetState');
+            }
+
+        }
+    })
+
+    store.subscribe((mutation, state) => {
+        // Store the state object as a JSON string
+        localStorage.setItem('store', JSON.stringify(state));
+    });
+
+    
+const getDefault = () => {
+    return {
+        total: 4,
+            cartItems: [
+                {
+                    "image": "https://media.sweetwater.com/images/items/120/SM57-medium.jpg",
+                    "url": "https://www.sweetwater.com/store/detail/SM57",
+                    "manufacturer": "Shure",
+                    "productName": "Sm57",
+                    "itemid": "SM57",
+                    "quantity": 1,
+                    "price": 99.00,
+                    "description": "Dynamic Microphone with Cardioid Pickup Pattern, 40Hz-15kHz Frequency Response, Low Impedance, Includes Stand Adapter, and Zippered Carrying Case",
+                    "available": 9
+                },
+                {
+                    "image": "https://media.sweetwater.com/api/i/f-webp__q-82__ha-c7901f059269b4c3__hmac-ca9855c930666d894a0047170b1c002f9d347ca3/images/items/750/SGS17HCCH-large.jpg.auto.webp",
+                    "url": "https://www.sweetwater.com/store/detail/SGS17HCCH/sn170099523",
+                    "manufacturer": "Gibson",
+                    "productName": "SG Standard 2017 T - Heritage Cherry",
+                    "itemid": "SGS17HCCH",
+                    "quantity": 1,
+                    "price": 1169.00,
+                    "serial": 170099523,
+                    "description": "Solidbody Electric Guitar with Mahogany Body, Mahogany Neck, Rosewood Fingerboard, and 2 Humbucking Pickups - Heritage Cherry",
+                    "available": 1
+                },
+                {
+                    "image": "https://media.sweetwater.com/images/items/120/SM58-medium.jpg",
+                    "url": "https://www.sweetwater.com/store/detail/SM58",
+                    "manufacturer": "Shure",
+                    "productName": "SM58",
+                    "itemid": "SM58",
+                    "quantity": 3,
+                    "price": 99.00,
+                    "description": "Dynamic Vocal Microphone with Cardioid Pickup Pattern and 50Hz-15kHz Frequency Response, Includes Stand Adapter, and Zippered Carrying Case",
+                    "available": 6
+                },
+                {
+                    "image": "https://media.sweetwater.com/images/items/120/R16-medium.jpg",
+                    "url": "https://www.sweetwater.com/store/detail/R16",
+                    "manufacturer": "Zoom",
+                    "productName": "R16",
+                    "itemid": "R16",
+                    "quantity": 1,
+                    "price": 399.99,
+                    "description": "16-track Portable SD Recorder, USB Audio Interface, and DAW Control Surface with 8 Microphone Inputs, Built-in Stereo Condenser Microphones, Built-in Effects, 1GB SD Card, and USB - Mac/PC",
+                    "available": 14
+                }
+                ],
+    }
+}
+
+</script>
+
+</body>
+</html>
